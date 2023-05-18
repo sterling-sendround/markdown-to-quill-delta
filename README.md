@@ -11,7 +11,7 @@ Converts Markdown to [Quill Delta](https://quilljs.com/docs/delta/) using [remar
 | Headers      | ✅     |
 | Text styling | ✅     |
 | Code blocks  | ✅     |
-| Quote blocks | ❌     |
+| Quote blocks | ✅     |
 | Lists        | ✅     |
 | Checkboxes   | ✅     |
 | Links        | ✅¹    |
@@ -23,6 +23,7 @@ Converts Markdown to [Quill Delta](https://quilljs.com/docs/delta/) using [remar
 This repo has been updated to include the following features:
 * indented ordered and bulleted lists
 * update heading conversion to match current Quill delta structure
+* add handling for blockquotes
 
 ## Usage
 
