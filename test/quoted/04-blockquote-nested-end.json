@@ -1,0 +1,4 @@
+[
+    {"insert":"three"},
+    {"attributes":{"indent": 2,"blockquote":true},"insert":"\n"}
+]

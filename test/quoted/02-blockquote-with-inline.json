@@ -1,0 +1,8 @@
+[
+    {"insert":"simple blockquote"},
+    {"attributes":{"blockquote":true},"insert":"\n"},
+    {"insert":"second "},
+    {"attributes":{"bold":true},"insert":"bold"},
+    {"insert":" line"},
+    {"attributes":{"blockquote":true},"insert":"\n"}
+]

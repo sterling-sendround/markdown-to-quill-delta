@@ -60,6 +60,7 @@ describe("Remark-Delta Transformer", () => {
   for (const t of tests) {
     test(`Markdown to Delta: ${t.name}`, () => {
       const ops = markdownToDelta(t.markdown);
+      console.log('OUT OPS', ops);
       expect(ops).toEqual(t.ops);
     });
   }

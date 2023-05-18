@@ -1,0 +1,10 @@
+[
+    {"insert":"numbers"},
+    {"attributes":{"list":"ordered"},"insert":"\n"},
+    {"insert":"indent"},
+    {"attributes":{"indent":1,"list":"ordered"},"insert":"\n"},
+    {"insert":"another"},
+    {"attributes":{"indent":1,"list":"ordered"},"insert":"\n"},
+    {"insert":"third"},
+    {"attributes":{"indent":2,"list":"ordered"},"insert":"\n"}
+]

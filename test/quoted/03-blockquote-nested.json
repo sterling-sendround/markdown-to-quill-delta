@@ -1,0 +1,14 @@
+[
+    {"insert":"level 1"},
+    {"attributes":{"blockquote":true},"insert":"\n"},
+    {"insert":"level 2"},
+    {"attributes":{"indent":1,"blockquote":true},"insert":"\n"},
+    {"insert":"level 1 again"},
+    {"attributes":{"blockquote":true},"insert":"\n"},
+    {"insert":"level 3"},
+    {"attributes":{"indent":2,"blockquote":true},"insert":"\n"},
+    {"insert":"level 2 again"},
+    {"attributes":{"indent":1,"blockquote":true},"insert":"\n"},
+    {"insert":"one"},
+    {"attributes":{"blockquote":true},"insert":"\n"}
+]
