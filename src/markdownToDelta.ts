@@ -36,9 +36,7 @@ export default function markdownToDelta(md: string): Op[] {
   };
 
   const listItemVisitor = (listNode: any) => (node: any) => {
-    console.log ('listItemVisitor', JSON.stringify({children: node.children.length, listNode}, null, 2));
     for (const child of node.children) {
-      console.log ('LIST CHILD NODE', JSON.stringify({child}, null, 2));
       if (child.type === "paragraph") {
         visit(child, "paragraph", paragraphVisitor());
       } else if (child.type === "list") {
@@ -46,7 +44,6 @@ export default function markdownToDelta(md: string): Op[] {
       }
 
       let indent = 0;
-      console.log ('INDENT', JSON.stringify({start: child.position.start.column, indent}, null, 2));
       let listAttribute = "";
       if (listNode.ordered) {
         listAttribute = "ordered";
@@ -63,13 +60,11 @@ export default function markdownToDelta(md: string): Op[] {
       if (indent !== 0) {
         delta.attributes.indent = indent;
       }
-      console.log ('> listItem child push', JSON.stringify({ops, delta}, null, 2));
       ops.push(delta);
     }
   };
 
   const paragraphVisitor = (initialOp: Op = {}, custom: CustomAction[] = []) => (node: any) => {
-    console.log ('paragraphVisitor', JSON.stringify({node}, null, 2));
     const { children } = node;
 
     const visitNode = (node: any, op: Op): Op[] | Op => {
@@ -125,11 +120,9 @@ export default function markdownToDelta(md: string): Op[] {
 
       if (localOps instanceof Array) {
         flatten(localOps).forEach(op => {
-          console.log ('> paragraphFlattened push', JSON.stringify({op}, null, 2));
           ops.push(op);
         });
       } else {
-        console.log ('> paragraph push local', JSON.stringify({localOps}, null, 2));
         ops.push(localOps);
       }
     }
@@ -142,114 +135,65 @@ export default function markdownToDelta(md: string): Op[] {
 
   // this is complicated because the md parser joins multi-line text into single
   // text elements "line 1\nline 2" where quill uses separate ops for each line
-  // this makes using the existing paragraphVisitor code hard to use becasue it
-  // doesn't know how to do something different per line of text
+  // the parser alse joins sequential nested quoted lines:
+  // > level 1
+  // >> level 2
+  // This results in a string "level 1\nlevel 2" in one paragraph entry that must
+  // be split up after
   const blockquoteVisitor = (node: any, depth: number = 0) => {
-    const before = ops.length;
-    let closed: boolean = false;
+    const before = ops.length; // record the index before we start adding ops for this blockquote
     for (const child of node.children) {
       if (child.type === 'blockquote') {
-        console.log('ops before inner BQ', ops);
+        blockquoteVisitor(child, depth + 1);
+      } else if (child.type === 'paragraph') {
+        paragraphVisitor()(child);
+      }
+      
+      // add the blockquote marker if there is not one already in place
+      // there can be one if the blockquote is indented multiple times
+      // without quoted content at each level:
+      // >>> level 3
+      // This parses to a hierarchy of {bq: bq: bq: para: level 3}
+      if (!ops[ops.length-1]?.attributes?.blockquote) {
         let op: any = { insert: '\n', attributes: { blockquote: true }};
         if (depth > 0) {
           op.attributes.indent = depth;
         }
         ops.push (op);
-        
-        //ops.push ( );
-        closed = true;
-        blockquoteVisitor(child, depth + 1);
-        console.log('ops after inner BQ', ops);
-      } else {
-        paragraphVisitor()(child);
       }
-    }
 
-    // find entries where the blockquote text is a multiline string and
-    // replace them with multiple ops to match how Quill expects it
-    for (let x = ops.length - 1; x >= before; x--) {
-      if (typeof ops[x].insert === 'string') {
-        let str = ops[x].insert?.toString();
-        if (str !== '\n' && str?.includes('\n')) { // quoted text with multiple lines
-          let parts = str.split ('\n');
-          let qOps: any[] = parts.map ((line: string, idx: number) => {
-            let newOps: any[] = [{ insert: line }];
-            console.log ('check if adding close', {x, idx, parts});
-            if (idx < parts.length-1 || ops[x+idx]?.attributes?.blockquote) {
-              let op: any = { insert: '\n', attributes: { blockquote: true } };
-              if (depth > 0) {
-                op.attributes.indent = depth;
-                depth--;
+      // expand any multi-line quoted text into multiple ops
+      for (let x = ops.length - 1; x >= before; x--) {
+        if (typeof ops[x].insert === 'string') {
+          let str = ops[x].insert?.toString();
+          if (str !== '\n' && str?.includes('\n')) { // quoted text with multiple lines
+            let parts = str.split ('\n');
+            let delta = ops[x+1]; // the delta kthat follows this multiline text
+            let remove = 1;
+            if (delta?.attributes?.blockquote) { // if the following delta is a blockquote marker, we replace it
+              remove = 2;
+            }
+            let qOps: any[] = parts.map ((line: string, idx: number) => {
+              let newOps: any[] = [{ insert: line }];
+              let newIndent = Math.max ((delta?.attributes?.indent || 0) - idx, 0);
+              // if this is not the last line or this delta is followed by a blockquote delta
+              // then we need to include a blockquote delta
+              if (idx < parts.length-1 || remove === 2) {
+                let op: any = { insert: '\n', attributes: { blockquote: true } };
+                if (newIndent > 0) {
+                  op.attributes.indent = newIndent;
+                }
+                newOps.push (op);
               }
-              newOps.push (op);
-              closed = true;
-            }
-            return newOps;
-          });
-          let remove = 1;
-          if (ops[x+1]?.attributes?.blockquote) {
-            remove = 2;
+              return newOps;
+            });
+            console.log ('Created new ops', JSON.stringify ({qOps, x, ops, remove}, null, 2));
+            ops.splice(x, remove, ...flatten(qOps));
           }
-          console.log ('Created new ops', JSON.stringify ({qOps, x, ops, remove}, null, 2));
-          ops.splice(x, remove, ...flatten(qOps));
         }
       }
     }
-    
-    if (!ops[ops.length-1]?.attributes?.blockquote) {
-      let op: any = { insert: '\n', attributes: { blockquote: true }};
-      if (depth > 0) {
-        op.attributes.indent = depth;
-        //depth--;
-      }
-      ops.push (op);
-    }
-
-    /*
-    for (const child of node.children) {
-      console.log ('blockquote child', child.type, child.type == 'paragraph', JSON.stringify({child}, null, 2));
-      if (child.type === "paragraph") {
-        function testFactory (parent: any) {
-          return (node: any, op: any): boolean => {
-            console.log ('Running test', {parent, node});
-            if (parent.children.includes(child)) {
-              console.log ('MATCHED', child);
-              return child.type === "text";
-            }
-            return false;
-          }
-        }
-
-        paragraphVisitor({}, [
-          new CustomAction(
-            testFactory (child),
-            (node: any, op: any) => {
-              console.log ('>> Running custom text handler:', node.value);
-              let parts = node.value.split ('\n');
-              return parts.map ((line: string) => {
-                return [
-                  { insert: line },
-                  { insert: '\n', attributes: { blockquote: true }}
-                ]
-              })
-            }
-          )
-        ])(child);*/
-        /*  { // add custom text handler to split lines
-          "text": (node: any, op: any) => {
-            console.log ('>> Running custom text handler:', node.value);
-            let parts = node.value.split ('\n');
-            return parts.map ((line: string) => {
-              return [
-                { insert: line },
-                { insert: '\n', attributes: { blockquote: true }}
-              ]
-            })
-          }
-        })(child);*/
-      /*}
-    }*/
-  };
+  }
 
   for (let idx = 0; idx < tree.children.length; idx++) {
     const child = tree.children[idx];

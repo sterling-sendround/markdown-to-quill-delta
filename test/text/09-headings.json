@@ -1,50 +1,47 @@
 [
   {
-    "attributes": {
-      "size": "huge"
-    },
     "insert": "This is an "
   },
   {
     "attributes": {
-      "size": "huge",
       "bold": true
     },
     "insert": "H1"
   },
   {
+    "attributes": {
+      "header": 1
+    },
     "insert": "\n"
   },
   {
-    "attributes": {
-      "size": "large"
-    },
     "insert": "This is an "
   },
   {
     "attributes": {
-      "size": "large",
       "bold": true
     },
     "insert": "H2"
   },
   {
+    "attributes": {
+      "header": 2
+    },
     "insert": "\n"
   },
   {
-    "attributes": {
-      "size": "large"
-    },
     "insert": "This is an "
   },
   {
     "attributes": {
-      "size": "large",
       "bold": true
     },
     "insert": "H3"
   },
   {
+    "attributes": {
+      "header": 3
+    },
     "insert": "\n"
   }
 ]
