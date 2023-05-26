@@ -4,10 +4,10 @@
   "description": "Convert Markdown to Quill Delta",
   "author": "Sebastian Frysztak <sebastian.frysztak.dev>",
   "license": "ISC",
-  "main": "lib/markdownToDelta.js",
-  "types": "lib/markdownToDelta.d.ts",
+  "main": "src/markdownToDelta.js",
+  "types": "src/markdownToDelta.d.ts",
   "files": [
-    "lib/**/*"
+    "src/**/*"
   ],
   "sideEffects": false,
   "type": "module",
