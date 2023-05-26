@@ -14,7 +14,8 @@
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc",
-    "build:w": "tsc -w"
+    "build:w": "tsc -w",
+    "postinstall": "tsc --outDir ./lib"
   },
   "keywords": [
     "remark",
@@ -36,6 +37,5 @@
     "remark-parse": "^10.0.1",
     "unified": "^10.1.2",
     "unist-util-visit": "^4.1.0"
-  },
-  "postinstall": "tsc --outDir ./lib"
+  }
 }
